@@ -26,14 +26,15 @@ with open('students.csv') as file:
     # list_csv_file.append({'id': input_id, 'name': input_name, 'lastname': input_lastname, 'email': input_email, 'grade': input_grade})
 
     # For sorting students, second parameter(key) is taken from user query. Make reverse True if you want descending sort
-    sorted_student_list = sorted(list_csv_file, key=itemgetter('grade'), reverse=False)
+    sorted_student_list = sorted(list_csv_file, key=itemgetter('id'), reverse=False)
 
     # Example of printing students which grades are below 50 (it prints 5 after 49?)
     for line in sorted_student_list:
-        if int(line['grade']) < 50:
+       # if int(line['grade']) < 50:
 
             # Printing all student data
-             print(line)
+       if(int(line['id']) <= 100):
+            print(line)
 
             # Printing grade-sorted array with only name and lastname. Column names will be taken from user query
            # print(line["id"], line["name"], line["lastname"], line["email"], line["grade"])
