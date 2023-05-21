@@ -12,6 +12,13 @@ def search_id(student_list: list, searched_id: str):
             return True
     return False
 
+# Check whether true or not the given conditions by the operation type
+def validate_operation(cond1:bool,operation_type:str,cond2:bool):
+    if operation_type == "and":
+        return cond1 and cond2
+    else:
+        return cond1 or cond2
+
 
 def fix_operation_indentation(input:str):
     if(input == "!<"):
@@ -58,6 +65,7 @@ def check_condition(symbol:str, student:str, constraint:str, value:str):
                 return True
 # end print_statement
 
+
 # Insert the given student values into the table if valid
 def insert_to_table(input_elements:list,student_list:list):
     # Split the student attributes from the user input
@@ -89,11 +97,11 @@ def insert_to_table(input_elements:list,student_list:list):
     return student_list
 # end insert_to_table
 
-
+# Delete student from table
 def delete_from_table(input_elements:list,student_list:list):
     # Check the number of the condition(s)
-    if(len(input_elements) > 7):
-        print("--MORE THAN ONE CONDITION--")
+    if len(input_elements) > 7:
+        print("--MORE THAN ONE CONDITION--")########delete this
         index = 4
         constraint1 = input_elements[index]
         symbol1 = fix_operation_indentation(input_elements[index + 1])
@@ -106,40 +114,65 @@ def delete_from_table(input_elements:list,student_list:list):
         operation_type = input_elements[7].lower()
 
         for student in list_csv_file:
-            if (operation_type == "and"):
-                if (check_condition(symbol1, student, constraint1, value1) and check_condition(symbol2, student, constraint2, value2)):
-                    print(student)
-                    student_list.remove(
-                        {'id': student['id'], 'name': student['name'], 'lastname': student['lastname'],
-                         'email': student['email'], 'grade': student['grade']})
-            else:
-                if (check_condition(symbol1, student, constraint1, value1) or check_condition(symbol2, student, constraint2, value2)):
-                    print(student)
-                    student_list.remove(
-                        {'id': student['id'], 'name': student['name'], 'lastname': student['lastname'],
-                         'email': student['email'], 'grade': student['grade']})
+            if validate_operation(check_condition(symbol1, student, constraint1, value1), operation_type, check_condition(symbol2, student, constraint2, value2)):
+                print(student)
+                student_list.remove(student)
 
 
     else:
-        print("--ONE CONDITION--")
+        print("--ONE CONDITION--")########delete this
         constraint = input_elements[4]
         symbol = input_elements[5]
         value = input_elements[6]
-
+        # Iterate through the list
         for student in list_csv_file:
-            if (check_condition(symbol,student,constraint,value)):
+            # Check the condition in the query
+            if check_condition(symbol, student, constraint, value):
                 print(student)
-                student_list.remove(
-                    {'id': student['id'], 'name': student['name'], 'lastname': student['lastname'], 'email': student['email'],'grade': student['grade']})
+                # DDelete the item if satisfies the condition
+                student_list.remove(student)
 
-    print(student_list.count('John'))
+    print(student_list.count('John')) # Check if any item left ########delete this
     return student_list
 # end delete_from_table
 
+# Select operation - query printing
+def select_operation():
+    # Sort the temporary student list
+    sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=False)
+
+    column_names = input_elements[1].split(',')
+
+    index = 5
+    operation_type = input_elements[8].lower()
+    # If multiple conditions in the query
+    if operation_type == "and" or operation_type == "or":
+        print("---MORE THAN ONE STATEMENT---")
+        constraint1 = input_elements[index]
+        symbol1 = fix_operation_indentation(input_elements[index + 1])
+        value1 = input_elements[index + 2]
+
+        constraint2 = input_elements[index + 4]
+        symbol2 = fix_operation_indentation(input_elements[index + 5])
+        value2 = input_elements[index + 6]
+
+        for student in sorted_student_list:
+            if validate_operation(check_condition(symbol1, student, constraint1, value1), operation_type,
+                                  check_condition(symbol2, student, constraint2, value2)):
+                print_columns(column_names, student)
 
 
-# Boolean to check whether the query is true or not
-is_the_query_true = False
+    # If one statement occurs for constraints
+    else:
+        print("---ONE STATEMENT---")########delete this
+        constraint = input_elements[5]
+        symbol = fix_operation_indentation(input_elements[6])
+        value = input_elements[7]
+
+        for student in sorted_student_list:
+            if check_condition(symbol, student, constraint, value):
+                print_columns(column_names, student)
+# end select_operation
 
 
 # opening the CSV file
@@ -151,23 +184,13 @@ with open('students.csv') as file:
     list_csv_file = list(csv_file)
 # end reading csv file
 
-
-# User Inputs, will be taken from user query
-input_id = "id"
-input_name = "name"
-input_lastname = "lastname"
-input_email = "email"
-input_grade = "grade"
-
-# INSERT INTO STUDENT VALUES(15000,Ali,Veli,ali.veli@spacex.com,20)
-# SELECT name FROM STUDENTS WHERE grade > 40 AND name = ‘John’ ORDER BY DSC
-# SELECT name,lastname FROM STUDENTS WHERE grade !< 40 ORDER BY ASC
-# DELETE FROM STUDENT WHERE name = ‘John’ and grade <= 20
-
+# Get the user input
 user_input = input("Please enter your query:\n")
+
 
 input_elements = user_input.split(" ") # Split the user input by space
 query_type = input_elements[0] # Store the query type (select, insert or delete)
+
 
 # Check the operation (insertion, remove or an item query)
 if (query_type.lower() == "insert"):
@@ -175,98 +198,14 @@ if (query_type.lower() == "insert"):
    list_csv_file = insert_to_table(input_elements,list_csv_file)
 
 
-
 # Delete operation
 elif (query_type.lower() == "delete"):
     list_csv_file = delete_from_table(input_elements,list_csv_file)
 
 
-# SELECT name FROM STUDENTS WHERE grade > 40 AND name = ‘John’ ORDER BY DSC
-# SELECT name,lastname FROM STUDENTS WHERE grade !< 40 ORDER BY ASC
-
 # Select operation
 elif (query_type.lower() == "select"):
-    # Sort the temporary student list
-    sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=False)
-
-    column_names = input_elements[1].split(',')
-
-    index = 5
-    operation_type = input_elements[8].lower()
-    # If multiple conditions in the query
-    if(operation_type == "and" or operation_type == "or"):
-        print("---MORE THAN ONE STATEMENT---")
-        constraint1 = input_elements[index]
-        symbol1 = fix_operation_indentation(input_elements[index+1])
-        value1 = input_elements[index+2]
-
-        constraint2 = input_elements[index+4]
-        symbol2 = fix_operation_indentation(input_elements[index+5])
-        value2 = input_elements[index+6]
-
-
-        for student in sorted_student_list:
-            if (operation_type == "and"):
-                if (check_condition(symbol1, student, constraint1, value1) and check_condition(symbol2, student, constraint2, value2)):
-                    print_columns(column_names, student)
-            else:
-                if (check_condition(symbol1, student, constraint1, value1) or check_condition(symbol2, student, constraint2, value2)):
-                    print_columns(column_names, student)
-
-
-
-
-    # If one statement occurs for constraints
-    else:
-        print("---ONE STATEMENT---")
-        constraint = input_elements[5]
-        symbol = fix_operation_indentation(input_elements[6])
-        value = input_elements[7]
-
-        for student in sorted_student_list:
-            if (check_condition(symbol, student, constraint, value)):
-                print_columns(column_names, student)
-
-        """
-        if (constraint.lower() == "id" or constraint.lower() == "grade"):
-            print("--ID OR GRADE(INT)--")
-            for student in sorted_student_list:
-                if(print_statement(symbol,student,constraint,value)):
-                    print_columns(column_names,student)
-
-
-
-        else:
-            print("--OTHER(STR)--")
-            if (symbol == "<" or symbol == "<=" or symbol == ">" or symbol == ">="):
-                print("-error!!!!!!!!!!!!!!!!!!!!!!!!-")
-                is_the_query_true = False
-            else:
-
-                for student in sorted_student_list:
-                    if (print_statement(symbol, student, constraint, value)):
-                        print_columns(column_names, student)
-
-                
-                if(symbol == "="):
-                    print("-EQUAL-")
-
-                    for student in sorted_student_list:
-                        # Printing student data
-                        if (student[constraint] == value):
-                           print_columns(column_names,student)
-
-                elif(symbol == "!="):
-                    print("-NOT EQUAL-")
-
-                    for student in sorted_student_list:
-                        # Printing student data
-                        if (student[constraint] != value):
-                           print_columns(column_names,student)
-                
-        """
-
-
+    select_operation()
 
 
 # Creating json file and writing students
