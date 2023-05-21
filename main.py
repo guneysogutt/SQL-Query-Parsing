@@ -137,7 +137,7 @@ def delete_from_table(input_elements:list,student_list:list):
 # end delete_from_table
 
 # Select operation - query printing
-def select_operation():
+def select_operation(input_elements:list,list_csv_file):
     # Sort the temporary student list
     sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=False)
 
@@ -205,7 +205,7 @@ elif (query_type.lower() == "delete"):
 
 # Select operation
 elif (query_type.lower() == "select"):
-    select_operation()
+    select_operation(input_elements,list_csv_file)
 
 
 # Creating json file and writing students
