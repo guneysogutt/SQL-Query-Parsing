@@ -196,22 +196,23 @@ def is_query_valid(input_elements: list, query_type: str):
     if (query_type.lower() == "insert"):
 
         if (len(input_elements) == 4):
-            last_item = input_elements[len(input_elements) - 1]
-            # Get the expression inside the brackets
-            last_item = last_item[last_item.index('(') + 1:last_item.index(')')]
+            # Checking if the values(val1,val2,val3,val4) entered correctly
+            if(input_elements[3][0:7].lower() == "values(" and input_elements[3][-1] == ")"):
+                last_item = input_elements[len(input_elements) - 1]
+                # Get the expression inside the brackets
+                last_item = last_item[last_item.index('(') + 1:last_item.index(')')]
 
-            student_attributes = last_item.split(',')  # Store input student values
+                student_attributes = last_item.split(',')  # Store input student values
 
-            # Converting all items to lowercase
-            for item_index in range(len(input_elements)):
-                input_elements[item_index] = input_elements[item_index].lower()
+                # Converting all items to lowercase
+                for item_index in range(len(input_elements)):
+                    input_elements[item_index] = input_elements[item_index].lower()
 
-            # Checking if the insert pattern is correct
-            if (input_elements[1] == "into" and input_elements[2] == "student" and
-                    input_elements[3][0:6] == "values" and len(student_attributes) == 5):
-                return True
+                # Checking if the insert pattern is correct
+                if (input_elements[1] == "into" and input_elements[2] == "student" and len(student_attributes) == 5):
+                    return True
 
-    if (query_type.lower() == "delete"):
+    elif (query_type.lower() == "delete"):
 
         # Converting all items to lowercase except special names (ex: name lastname)
         for item_index in range(len(input_elements)):
@@ -235,7 +236,7 @@ def is_query_valid(input_elements: list, query_type: str):
                     and (input_elements[9] in ["=", "!=", "<", ">", "<=", ">=", "!<", "!>"])):
                 return True
 
-    if (query_type.lower() == "select"):
+    elif (query_type.lower() == "select"):
 
         # Converting all items to lowercase except special names (name lastname)
         for item_index in range(len(input_elements)):
