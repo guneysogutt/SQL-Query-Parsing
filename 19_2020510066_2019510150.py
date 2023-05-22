@@ -33,10 +33,10 @@ def fix_operation_indentation(input: str):
 def print_columns(column_names: list, student: str):
     for name in column_names:
         if name.lower() == "all":
-            print(student['id'],student['name'],student['lastname'],student['email'],student['grade'])
+            print(student['id'],student['name'],student['lastname'],student['email'],student['grade'], end=" ")
         else:
             print(student[name], end=" ")
-            print()
+    print()
 
 
 # end print_columns
@@ -148,24 +148,19 @@ def select_operation(input_elements: list, list_csv_file):
 
     # Sort the temporary student list
     if (input_elements[-1].lower() == "dsc"):
-        sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=True)
-
+        descending_sort = True
     else:
-        sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=False)
+        descending_sort = False
+
+    sort_referance_column = input_elements[1].split(',')[0]
+
+
 
     column_names = input_elements[1].split(',')
 
-    # If a condition given in the query
     if len(input_elements) > 4:
         # Sort the temporary student list
-        if (input_elements[-1].lower() == "dsc"):
-            descending_sort = True
-        else:
-            descending_sort = False
-
-        sort_referance_column = input_elements[1].split(',')[0]
-
-        # Checking if the sort referance column is integer
+        # Checking if the sort reference column is integer
         if (sort_referance_column in ["id", "grade"]):
             sorted_student_list = sorted(list_csv_file, key=lambda k: int(k[sort_referance_column]),
                                          reverse=descending_sort)
@@ -175,37 +170,40 @@ def select_operation(input_elements: list, list_csv_file):
             else:
                 sorted_student_list = sorted(list_csv_file, key=lambda k: k[sort_referance_column],
                                              reverse=descending_sort)
-
-        index = 5
-        operation_type = input_elements[8].lower()
-        # If multiple conditions in the query
-        if operation_type == "and" or operation_type == "or":
-            constraint1 = input_elements[index]
-            symbol1 = fix_operation_indentation(input_elements[index + 1])
-            value1 = input_elements[index + 2]
-
-            constraint2 = input_elements[index + 4]
-            symbol2 = fix_operation_indentation(input_elements[index + 5])
-            value2 = input_elements[index + 6]
-
+        if input_elements[-4].lower() == "students":
             for student in sorted_student_list:
-                if validate_operation(check_condition(symbol1, student, constraint1, value1), operation_type,
-                                      check_condition(symbol2, student, constraint2, value2)):
-                    print_columns(column_names, student)
-
-
-        # If one statement occurs for constraints
+                print_columns(column_names, student)
         else:
-            constraint = input_elements[5]
-            symbol = fix_operation_indentation(input_elements[6])
-            value = input_elements[7]
+            index = 5
+            operation_type = input_elements[8].lower()
+            # If multiple conditions in the query
+            if operation_type == "and" or operation_type == "or":
+                constraint1 = input_elements[index]
+                symbol1 = fix_operation_indentation(input_elements[index + 1])
+                value1 = input_elements[index + 2]
 
-            for student in sorted_student_list:
-                if check_condition(symbol, student, constraint, value):
-                    print_columns(column_names, student)
+                constraint2 = input_elements[index + 4]
+                symbol2 = fix_operation_indentation(input_elements[index + 5])
+                value2 = input_elements[index + 6]
+
+                for student in sorted_student_list:
+                    if validate_operation(check_condition(symbol1, student, constraint1, value1), operation_type,
+                                          check_condition(symbol2, student, constraint2, value2)):
+                        print_columns(column_names, student)
+            # If one statement occurs for constraints
+            else:
+                constraint = input_elements[5]
+                 # If a condition given in the query
+                symbol = fix_operation_indentation(input_elements[6])
+                value = input_elements[7]
+
+                for student in sorted_student_list:
+                    if check_condition(symbol, student, constraint, value):
+                        print_columns(column_names, student)
 
     # If a condition is not given in the query
     else:
+        sorted_student_list = sorted(list_csv_file, key=lambda k: int(k['id']), reverse=False)
         for student in sorted_student_list:
             print_columns(column_names, student)
 # end select_operation
@@ -228,7 +226,7 @@ def is_query_valid(input_elements: list, query_type: str):
                     input_elements[item_index] = input_elements[item_index].lower()
 
                 # Checking if the insert pattern is correct
-                if (input_elements[1] == "into" and input_elements[2] == "student" and len(student_attributes) == 5):
+                if (input_elements[1] == "into" and input_elements[2] == "students" and len(student_attributes) == 5):
                     return True
 
     elif (query_type.lower() == "delete"):
@@ -240,14 +238,14 @@ def is_query_valid(input_elements: list, query_type: str):
 
         # If the query includes only one constraint
         if (len(input_elements) == 7):
-            if (input_elements[1] == "from" and input_elements[2] == "student" and input_elements[3] == "where"
+            if (input_elements[1] == "from" and input_elements[2] == "students" and input_elements[3] == "where"
                     and (input_elements[4] in ["id", "name", "lastname", "email", "grade"])
                     and (input_elements[5] in ["=", "!=", "<", ">", "<=", ">=", "!<", "!>"])):
                 return True
 
         # If the query includes two constraint
         if (len(input_elements) == 11):
-            if (input_elements[1] == "from" and input_elements[2] == "student" and input_elements[3] == "where"
+            if (input_elements[1] == "from" and input_elements[2] == "students" and input_elements[3] == "where"
                     and (input_elements[4] in ["id", "name", "lastname", "email", "grade"])
                     and (input_elements[5] in ["=", "!=", "<", ">", "<=", ">=", "!<", "!>"])
                     and (input_elements[7] in ["and", "or"])
@@ -270,14 +268,21 @@ def is_query_valid(input_elements: list, query_type: str):
             if column_name not in ["id", "name", "lastname", "email", "grade", "all"]:
                 return False
 
-        # If the query does not include any constraint
+        # If the query does not include any constraint and order by
         if (len(input_elements) == 4):
-            if (input_elements[2] == "from" and input_elements[3] == "student"):
+            if (input_elements[2] == "from" and input_elements[3] == "students"):
+                return True
+
+        # If the query does not include any constraint
+        elif ((len(input_elements) == 7)):
+            if (input_elements[2] == "from" and input_elements[3].lower() == "students" and input_elements[4] == "order"
+                    and input_elements[5] == "by"
+                    and (input_elements[6] in ["asc", "dsc"])):
                 return True
 
         # If the query includes only one constraint
         elif (len(input_elements) == 11):
-            if (input_elements[2] == "from" and input_elements[3].lower() == "student" and input_elements[4] == "where"
+            if (input_elements[2] == "from" and input_elements[3].lower() == "students" and input_elements[4] == "where"
                     and (input_elements[5] in ["id", "name", "lastname", "email", "grade"])
                     and (input_elements[6] in ["=", "!=", "<", ">", "<=", ">=", "!<", "!>"])
                     and input_elements[8] == "order" and input_elements[9] == "by"
@@ -286,7 +291,7 @@ def is_query_valid(input_elements: list, query_type: str):
 
         # If the query includes two constraint
         elif (len(input_elements) == 15):
-            if (input_elements[2] == "from" and input_elements[3].lower() == "student" and input_elements[4] == "where"
+            if (input_elements[2] == "from" and input_elements[3].lower() == "students" and input_elements[4] == "where"
                     and (input_elements[5] in ["id", "name", "lastname", "email", "grade"])
                     and (input_elements[6] in ["=", "!=", "<", ">", "<=", ">=", "!<", "!>"])
                     and (input_elements[8] in ["and", "or"])
